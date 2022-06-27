@@ -32,6 +32,8 @@ func Config() {
 	router.Post("/auth/logout", Logout)
 	router.Get("/auth/check", VerificaSessao)
 	router.Get("/usuario", ObtemUsuario)
+	router.Get("/voo", ObtemListaVoos)
+	router.Get("/voo/:link", ObtemDetalheVoo)
 
 	router.Listen(":5000")
 }
