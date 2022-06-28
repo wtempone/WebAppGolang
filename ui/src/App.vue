@@ -9,7 +9,7 @@
 
       <v-toolbar-title>Clube - Golang</v-toolbar-title>
     </v-app-bar>
-    <Mapa3d></Mapa3d>
+    <SingleMapa3d></SingleMapa3d>
     <!-- <v-main style="margin-top: 50px;">
       <router-view />
     </v-main> -->
@@ -19,9 +19,9 @@
 <script>
 import MenuPrincipal from './components/MenuPrincipal.vue';
 import { mapActions, mapGetters } from "vuex";
-import Mapa3d from './components/Mapa3d2.vue';
+import SingleMapa3d from './components/SingleMapa3d.vue';
 
 export default {
-    components: { Mapa3d }
+    components: { SingleMapa3d }
 }
 </script>

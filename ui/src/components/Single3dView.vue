@@ -1,49 +1,31 @@
 <template>
-
     <div>
         <div id="appgl" class="root3dElement">
         </div>
 
-        <div class="text-center">
-            <v-progress-linear class="mx-2 my-2" :value="animationProgress * 100"></v-progress-linear>
-            <span class="h3">
-                {{ velocityPlus }}
-            </span>
-            <v-icon v-if="reverseMode" large color="grey darken-2">
-                mdi-chevron-left-box-outline
-            </v-icon>
-            <v-icon v-if="!reverseMode" large color="grey darken-2">
-                mdi-chevron-right-box-outline
-            </v-icon>
-            <v-btn @click="backward()" class="mx-2" fab dark color="indigo">
-                <v-icon dark>
-                    mdi-skip-backward
+        
+        <div class="progress-panel">
+
+            <div class="labels">
+                <v-icon v-if="reverseMode" small color="white">
+                    mdi-chevron-left-box-outline
                 </v-icon>
-            </v-btn>
-            <v-btn @click="replay()" class="mx-2" fab dark color="indigo">
-                <v-icon dark>
-                    mdi-replay
+
+                <span color="white">
+                    {{ velocityPlus }}
+                </span>
+
+                <v-icon v-if="!reverseMode" small color="white">
+                    mdi-chevron-right-box-outline
                 </v-icon>
-            </v-btn>
-            <v-btn @click="play()" class="mx-2" fab dark color="indigo">
-                <v-icon dark>
-                    mdi-play
-                </v-icon>
-            </v-btn>
-            <v-btn @click="pause()" class="mx-2" fab dark color="indigo">
-                <v-icon dark>
-                    mdi-pause
-                </v-icon>
-            </v-btn>
-            <v-btn @click="forward()" class="mx-2" fab dark color="indigo">
-                <v-icon dark>
-                    mdi-skip-forward
-                </v-icon>
-            </v-btn>
+            </div>
+            <v-progress-linear class="mx-0"></v-progress-linear>
+
         </div>
     </div>
 </template>
 <script>
+
 import {
     Mesh,
     PerspectiveCamera,
@@ -59,10 +41,10 @@ import {
     Vector3,
     CatmullRomCurve3
 } from 'three';
+
 import { InteractionManager } from "three.interactive";
 import * as TWEEN from "@tweenjs/tween.js";
 import ThreeJSOverlayView from '@ubilabs/threejs-overlay-view';
-import json from '../assets/609705.json'
 import { Line2 } from 'three/examples/jsm/lines/Line2.js';
 import { LineMaterial } from 'three/examples/jsm/lines/LineMaterial.js';
 import { LineGeometry } from 'three/examples/jsm/lines/LineGeometry.js';
@@ -70,8 +52,12 @@ import {
     getMapsApiOptions,
     loadMapsApi
 } from '../jsm/load-maps-api';
+import moment from 'moment';
 
 export default {
+    props:{
+        jsonTrack: {},
+    },
     data: () => ({
         map: {},
         idRoot3dElement: "appgl",
@@ -83,7 +69,7 @@ export default {
         light: {},
         overlay: {},
         VIEW_PARAMS: {
-            center: { lat: 53.554486, lng: 10.007479 },
+            center: { },
             zoom: 17,
             heading: 40,
             tilt: 65,
@@ -93,21 +79,30 @@ export default {
         velocityPlus: 1,
         PLAYER_FRONT: new Vector3(0, 1, 0),
         tmpVec3: new Vector3(),
-        jsonTrack: json,
         animationProgress: 0,
+        animationProgressIndex: 0,
         deltaTime: 0.0005,
         curve: {},
         trackLine: {},
         player: {},
         timeToUpdateCAmera: 10000,
-        time: {}
+        time: {},
     }),
+    watch: {
+
+    },
     methods: {
         velocityUp: function () {
             if (this.velocityPlus >= 6) re
             {
                 this.velocityPlus++
             }
+        },
+        dateTime(value) {
+            return moment(value).format('H:mm');
+        },
+        formatHour(value) {
+            return moment(value, "HH:mm:ss").format('H:mm');
         },
         velocityDown: function () {
             if (this.velocityPlus < 2) return
@@ -174,6 +169,7 @@ export default {
                     } else {
                         this.timeToUpdateCAmera = 0
                         const indexPosition = parseInt(this.jsonTrack.trackingLog.coords.length * this.animationProgress);
+                        this.animationProgressIndex = indexPosition;
                         const cameraPosition = this.jsonTrack.trackingLog.coords[indexPosition]
 
                         const cameraOptions = {
@@ -203,13 +199,6 @@ export default {
                 this.animationProgress =
                     this.animationProgress + ((this.reverseMode ? -this.deltaTime : this.deltaTime) * this.velocityPlus)
             }
-            console.log(
-                "final update => animationProgress:", this.animationProgress,
-                ", playing:", this.playing,
-                ", reverseMode:", this.reverseMode,
-                ", deltaTime:", this.deltaTime,
-                ", velocityPlus:", this.velocityPlus,
-            )
         },
         createCamera: function () {
             const camera = new PerspectiveCamera(
@@ -280,6 +269,10 @@ export default {
             if (this.jsonTrack.trackingLog.coords[0]) {
                 const cord = this.jsonTrack.trackingLog.coords[0]
                 this.VIEW_PARAMS.center = { lat: cord.lat, lng: cord.lng }
+                this.jsonTrack.trackingLog.times = this.jsonTrack.trackingLog.times.map(x => (this.dateTime(x)))
+                this.jsonTrack.voo.horaDecolagem = this.formatHour(this.jsonTrack.voo.horaDecolagem)
+                this.jsonTrack.voo.horaPouso = this.formatHour(this.jsonTrack.voo.horaPouso)
+                this.jsonTrack.voo.duracao = this.formatHour(this.jsonTrack.voo.duracao)
             } else {
                 console.log("Coordenadas nao iniciadas")
             }
@@ -376,13 +369,13 @@ export default {
     }
 }
 </script>
-<style>
+<style  lang= scss>
 .root3dElement {
-    position: relative;
+    position: absolute;
     top: 0;
     left: 0;
     width: 100%;
-    height: 500px;
+    height: 100%;
     z-index: 0;
 }
 </style>
