@@ -1,27 +1,29 @@
 <template>
   <v-app id="inspire">
-    <!-- <v-navigation-drawer v-if="usuario" v-model="drawer" app>
+    <v-navigation-drawer v-model="drawer" app>
       <MenuPrincipal></MenuPrincipal>
-    </v-navigation-drawer> -->
+    </v-navigation-drawer>
 
     <v-app-bar app>
-      <v-app-bar-nav-icon  @click="drawer = !drawer"></v-app-bar-nav-icon>
+      <v-app-bar-nav-icon @click="drawer = !drawer"></v-app-bar-nav-icon>
 
       <v-toolbar-title>Clube - Golang</v-toolbar-title>
     </v-app-bar>
-    <SingleMapa3d></SingleMapa3d>
-    <!-- <v-main style="margin-top: 50px;">
+    <v-main>
       <router-view />
-    </v-main> -->
+    </v-main>
   </v-app>
 </template>
 
 <script>
 import MenuPrincipal from './components/MenuPrincipal.vue';
 import { mapActions, mapGetters } from "vuex";
-import SingleMapa3d from './components/SingleMapa3d.vue';
+import Map3DControls from './components/Map3DControls.vue';
+import FormLogin from './components/FormLogin.vue';
+import AreaLogada from './views/AreaLogada.vue';
 
 export default {
-    components: { SingleMapa3d }
+  data: () => ({ drawer: null }),
+  components: { Map3DControls, FormLogin, MenuPrincipal, AreaLogada }
 }
 </script>

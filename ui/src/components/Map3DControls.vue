@@ -1,8 +1,8 @@
 <template>
 
     <div>
-        <Single3dView :jsonTrack="jsonTrack" ref="single3dView"
-        ></Single3dView>
+        <Map3DScene :jsonTrack="jsonTrack" ref="map3DScene"
+        ></Map3DScene>
 <!--  -->
         <div class="panel-controls">
             <v-speed-dial v-model="controlsSlide.fab" :top="controlsSlide.top" :bottom="controlsSlide.bottom"
@@ -18,31 +18,31 @@
                     </v-btn>
                 </template>
 
-                <v-btn @click="$refs.single3dView.forward()" class="mx-2" small fab dark color="indigo">
+                <v-btn @click="$refs.map3DScene.forward()" class="mx-2" small fab dark color="indigo">
                     <v-icon dark>
                         mdi-skip-forward
                     </v-icon>
                 </v-btn>
 
-                <v-btn @click="$refs.single3dView.pause()" class="mx-2" small fab dark color="indigo">
+                <v-btn @click="$refs.map3DScene.pause()" class="mx-2" small fab dark color="indigo">
                     <v-icon dark>
                         mdi-pause
                     </v-icon>
                 </v-btn>
 
-                <v-btn @click="$refs.single3dView.play()" class="mx-2" small fab dark color="indigo">
+                <v-btn @click="$refs.map3DScene.play()" class="mx-2" small fab dark color="indigo">
                     <v-icon dark>
                         mdi-play
                     </v-icon>
                 </v-btn>
 
-                <v-btn @click="$refs.single3dView.replay()" class="mx-2" small fab dark color="indigo">
+                <v-btn @click="$refs.map3DScene.replay()" class="mx-2" small fab dark color="indigo">
                     <v-icon dark>
                         mdi-replay
                     </v-icon>
                 </v-btn>
 
-                <v-btn @click="$refs.single3dView.backward()" class="mx-2" small fab dark color="indigo">
+                <v-btn @click="$refs.map3DScene.backward()" class="mx-2" small fab dark color="indigo">
                     <v-icon dark>
                         mdi-skip-backward
                     </v-icon>
@@ -67,14 +67,14 @@
                     </v-btn>
                 </template>
 
-                <v-card v-if="$refs.single3dView && $refs.single3dView.jsonTrack.trackingLog"  class="mx-auto telemetry-card" max-width="400">
+                <v-card v-if="$refs.map3DScene && $refs.map3DScene.jsonTrack.trackingLog"  class="mx-auto telemetry-card" max-width="400">
 
                     <v-list-item >
                         <v-list-item-icon>
                             <v-icon color="white">mdi-send</v-icon>
                         </v-list-item-icon>
                         <v-list-item-subtitle class="white--text">{{
-                                $refs.single3dView.jsonTrack.trackingLog.coords[$refs.single3dView.animationProgressIndex].altitude
+                                $refs.map3DScene.jsonTrack.trackingLog.coords[$refs.map3DScene.animationProgressIndex].altitude
                         }}
                         </v-list-item-subtitle>
                     </v-list-item>
@@ -83,7 +83,7 @@
                         <v-list-item-icon>
                             <v-icon color="white">mdi-cloud-download</v-icon>
                         </v-list-item-icon>
-                        <v-list-item-subtitle class="white--text">{{ $refs.single3dView.jsonTrack.trackingLog.times[$refs.single3dView.animationProgressIndex]
+                        <v-list-item-subtitle class="white--text">{{ $refs.map3DScene.jsonTrack.trackingLog.times[$refs.map3DScene.animationProgressIndex]
                         }}
                         </v-list-item-subtitle>
                     </v-list-item>
@@ -93,7 +93,7 @@
                             <v-icon color="white">mdi-cloud-download</v-icon>
                         </v-list-item-icon>
                         <v-list-item-subtitle class="white--text">{{
-                                $refs.single3dView.jsonTrack.trackingLog.climbs[$refs.single3dView.animationProgressIndex]
+                                $refs.map3DScene.jsonTrack.trackingLog.climbs[$refs.map3DScene.animationProgressIndex]
                         }}
                         </v-list-item-subtitle>
                     </v-list-item>
@@ -174,11 +174,11 @@
 <script>
 
 import moment from 'moment';
-import Single3dView from './Single3dView.vue';
-import json from '../assets/496171.json'
+import Map3DScene from './Map3DScene.vue';
+import json from '../assets/609705.json'
 
 export default {
-    components: { Single3dView },
+    components: { Map3DScene },
     data: () => ({
         jsonTrack: json,
         viewData: {},
@@ -232,7 +232,6 @@ export default {
 
     },
     async mounted() {
-        console.log("PAssa", this.$refs.single3dView)
     }
 }
 </script>

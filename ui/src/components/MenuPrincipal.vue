@@ -37,11 +37,10 @@
                     </v-list-item-content>
                 </v-list-item>
             </router-link>
-
         </v-list>
-        <div v-if="usuario" class="pa-2">
-            <v-btn @click="sair" block>
-                Sair
+        <div class="pa-2">
+            <v-btn @click="login" block>
+                {{ usuario ? "Sair" : "Login" }}
             </v-btn>
         </div>
     </div>
@@ -54,8 +53,9 @@ export default {
     data() {
         return {
             items: [
-                { title: 'Home', icon: 'mdi-home', link: "/home" },
-                { title: 'Voos', icon: 'mdi-paragliding', link: "/voo"},
+                // { title: 'Home', icon: 'mdi-home', link: "/home" },
+                // { title: 'Home', icon: 'mdi-home', link: "/home" },
+                { title: 'Voos', icon: 'mdi-paragliding', link: "/voos" },
             ],
             right: null,
         }
@@ -65,11 +65,15 @@ export default {
     },
     methods: {
         ...mapActions('usuario', ['atualizaUsuario', 'logout']),
-        sair() {
-            logout().then(() => {
-                this.logout()
+        login() {
+            if (this.usuario) {
+                logout().then(() => {
+                    this.logout()
+                    this.$router.push("/login")
+                })
+            } else {
                 this.$router.push("/login")
-            })
+            }
         }
     }
 }

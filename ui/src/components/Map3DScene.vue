@@ -3,7 +3,7 @@
         <div id="appgl" class="root3dElement">
         </div>
 
-        
+
         <div class="progress-panel">
 
             <div class="labels">
@@ -39,7 +39,12 @@ import {
     ExtrudeGeometry,
     MeshStandardMaterial,
     Vector3,
-    CatmullRomCurve3
+    CatmullRomCurve3,
+    PlaneBufferGeometry,
+    TextureLoader,
+    PlaneGeometry,
+    ShaderMaterial,
+    BufferAttribute,
 } from 'three';
 
 import { InteractionManager } from "three.interactive";
@@ -52,10 +57,10 @@ import {
     getMapsApiOptions,
     loadMapsApi
 } from '../jsm/load-maps-api';
+import { getImageMap, getImageMapBump } from '@/services/google';
 import moment from 'moment';
-
 export default {
-    props:{
+    props: {
         jsonTrack: {},
     },
     data: () => ({
@@ -68,8 +73,9 @@ export default {
         cubes: [],
         light: {},
         overlay: {},
+        zoom: 17,
         VIEW_PARAMS: {
-            center: { },
+            center: { lat: -19.35065, lng: -42.56858 },
             zoom: 17,
             heading: 40,
             tilt: 65,
@@ -87,6 +93,7 @@ export default {
         player: {},
         timeToUpdateCAmera: 10000,
         time: {},
+        cordsAjusted: {}
     }),
     watch: {
 
@@ -151,10 +158,10 @@ export default {
             requestAnimationFrame(loop);
         },
         modifyScene: function (time) {
-            this.trackLine.material.resolution.copy(this.overlay.getViewportSize());
-
             if (!this.player) return;
             if (this.playing) {
+                this.trackLine.material.resolution.copy(this.overlay.getViewportSize());
+
                 if (this.animationProgress > 1) {
                     this.animationProgress = 1
                 } else if (this.animationProgress < 0) {
@@ -207,7 +214,7 @@ export default {
                 0.1,
                 1000
             );
-            camera.position.z = 5;
+            camera.position.z = 500;
             return camera;
         },
         createCube: function ({ color, x, y }) {
@@ -232,7 +239,7 @@ export default {
 
             const extrudeSettings = {
                 steps: 2,  // ui: steps
-                depth: 20,  // ui: depth
+                depth: 4,  // ui: depth
                 bevelEnabled: true,  // ui: bevelEnabled
                 bevelThickness: 1,  // ui: bevelThickness
                 bevelSize: 1,  // ui: bevelSize
@@ -264,18 +271,139 @@ export default {
             scene.background = new Color(0xffffff);
             return scene;
         },
-        config3dSpace: async function () {
-
+        openFile: function () {
             if (this.jsonTrack.trackingLog.coords[0]) {
                 const cord = this.jsonTrack.trackingLog.coords[0]
                 this.VIEW_PARAMS.center = { lat: cord.lat, lng: cord.lng }
+
                 this.jsonTrack.trackingLog.times = this.jsonTrack.trackingLog.times.map(x => (this.dateTime(x)))
                 this.jsonTrack.voo.horaDecolagem = this.formatHour(this.jsonTrack.voo.horaDecolagem)
                 this.jsonTrack.voo.horaPouso = this.formatHour(this.jsonTrack.voo.horaPouso)
                 this.jsonTrack.voo.duracao = this.formatHour(this.jsonTrack.voo.duracao)
-            } else {
-                console.log("Coordenadas nao iniciadas")
+                this.animationProgress = 0
+                this.time = 0
+                this.playing = false
+                this.curve = this.convertTrackinglogToCurve()
+                this.trackLine = this.createTrackLine(this.curve);
+                //  this.player.setPositions(this.cordsAjusted)
+                this.scene.add(this.trackLine);
             }
+        },
+        updateCurrentLocation: function () {
+            navigator.geolocation.getCurrentPosition(
+                position => {
+                    const coord = { lat: position.coords.latitude, lng: position.coords.longitude }
+                    console.log("geting CurrentLocation ==> "), coord
+                    this.VIEW_PARAMS.center = { lat: coord.lat, lng: coord.lng }
+                },
+                error => {
+                    console.log('erro - possition', error.message);
+                },
+            )
+        },
+        createGround: async function () {
+            const { apiKey, mapId } = getMapsApiOptions();
+            console.log(apiKey)
+            console.log(mapId)
+            const loader = new TextureLoader()
+            const utlImage = getImageMap(this.VIEW_PARAMS.center, this.VIEW_PARAMS.zoom, 300, 2)
+            console.log(utlImage);
+            const texture = loader.load(utlImage)
+
+            const geometry = new PlaneBufferGeometry(300, 300, 10, 10)
+
+            const positions = geometry.attributes.position.array;
+
+            var vertices = []
+            console.log("positions.length: ", geometry.attributes.position.array)
+            for (let i = 0; i < positions.length; i += 3) {
+                const v = new Vector3(positions[i], positions[i + 1], positions[i + 2])
+                vertices.push(v)
+            }
+
+            console.log('vertices:', vertices)
+            // let coords = vertices;
+            // coords = coords.map(p => (this.overlay.vector3ToLatLngAlt(p)));
+            // console.log("coords:", coords)
+            // const coorsLatLng = coords.map(c => ({ lat: c.lat, lng: c.lng }))
+            // console.log("coords:", coords)
+
+            // const altitudes = await this.getElevations(coorsLatLng);
+            // console.log("altitudes:", altitudes)
+
+            // for (let i = 0; i < coords.length; i++) {
+            //     vertices[i].z = altitudes[i].elevation - 700
+            // }
+
+            // console.log('newVertices', vertices)
+
+            //const newPoints = new Float32Array(geometry.attributes.position.array.length * 3)
+            // for (var i = 0; i < vertices.length; i++) {
+            //     console.log('vertice -> ',vertices[i])
+            //     newPoints[i].fill(vertices[i].x, vertices[i].y, vertices[i].z)
+            // }
+            //console.log("newPoints ", newPoints);
+            // const positionAttribute = new BufferAttribute().copyVector3sArray(vertices)
+            // geometry.setAttribute('position', positionAttribute)
+
+            // const newGeometry = new BufferGeometry().setFromPoints(newPoints)
+            const material = new MeshStandardMaterial({ color: 0xff8888, map: texture })
+
+            const plane = new Mesh(geometry, material)
+            //plane.scale.set(1.125, 1.125, 1)
+
+            return plane
+        },
+        recreateMeshByVector3Array(geometry, vector3array) {
+            const quaternion = new THREE.Quaternion();
+
+            for (let i = 0; i < geometry.vertices.length; i++) {
+                // a single vertex Y position
+                const zPos = geometry.vertices[i].z;
+                const twistAmount = 10;
+                const direction = new Vector3(1, 0, 0);
+
+                quaternion.setFromAxisAngle(
+                    direction,
+                    (Math.PI / 180) * (zPos / twistAmount)
+                );
+
+                geometry.vertices[i].applyQuaternion(quaternion);
+            }
+
+            // tells Three.js to re-render this mesh
+            geometry.verticesNeedUpdate = true;
+        },
+        listToMatrix: function (list, elementsPerSubArray) {
+            var matrix = [], i, k;
+            console.log(list)
+            for (i = 0, k = -1; i < list.length; i++) {
+                if (i % elementsPerSubArray === 0) {
+                    k++;
+                    matrix[k] = [];
+                }
+
+                matrix[k].push(list[i]);
+            }
+
+            return matrix;
+        },
+        getElevations: async function (locations) {
+            const elevator = new google.maps.ElevationService();
+            return elevator
+                .getElevationForLocations({
+                    locations: locations,
+                })
+                .then(({ results }) => {
+                    return results
+                })
+                .catch((e) =>
+                    console.log("Elevation service failed due to: " + e)
+                );
+
+        },
+        config3dSpace: async function () {
+            //this.updateCurrentLocation();
 
             this.renderer = this.createRenderer();
             this.scene = this.createScene();
@@ -289,15 +417,16 @@ export default {
 
             this.map = await this.initMap()
             this.addMap(this.map)
-            this.curve = this.convertTrackinglogToCurve()
 
-            this.trackLine = this.createTrackLine(this.curve);
-
-            this.scene.add(this.trackLine);
+            const ground = await this.createGround()
+            this.scene.add(ground)
             this.player = this.createHeartShape()
             this.scene.add(this.player)
             this.light = this.createLight()
             this.scene.add(this.light);
+
+            this.openFile()
+
 
             this.overlay.requestRedraw();
             this.renderer.render(this.scene, this.camera);
@@ -323,7 +452,7 @@ export default {
             const trackLine = new Line2(
                 new LineGeometry(),
                 new LineMaterial({
-                    color: 0xFF0000, linewidth: 0.01
+                    color: 0xFF0000, linewidth: 0.0001
                 })
             );
 
@@ -336,8 +465,8 @@ export default {
             if (this.jsonTrack.trackingLog.coords) {
                 const cords = this.jsonTrack.trackingLog.coords
                 const origin = cords[0].altitude
-                const cordsAjusted = cords.map(x => ({ lat: x.lat, lng: x.lng, altitude: 0 }))
-                points = cordsAjusted.map(p => this.overlay.latLngAltToVector3(p));
+                this.cordsAjusted = cords.map(x => ({ lat: x.lat, lng: x.lng, altitude: x.altitude - origin }))
+                points = this.cordsAjusted.map(p => this.overlay.latLngAltToVector3(p));
             }
 
             const curve = new CatmullRomCurve3(points, false, 'catmullrom', 0.2);
@@ -345,7 +474,7 @@ export default {
             return curve
         },
         initMap: async function () {
-            const { mapId } = getMapsApiOptions();
+            const { apiKey, mapId } = getMapsApiOptions();
 
             await loadMapsApi();
 

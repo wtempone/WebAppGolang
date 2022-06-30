@@ -1,5 +1,5 @@
 <template>
-  <v-card class="mx-auto" max-width="400">
+  <v-card class="mt-n120 dialog-form mx-auto" elevation="24" max-width="400">
     <v-list-item two-line>
       <v-list-item-content>
         <v-list-item-title class="text-h5">
@@ -67,8 +67,9 @@ export default {
         this.formErro = ''
         login(this.formDados.email, this.formDados.senha)
           .then(() => {
+            console.log('passa)')
             this.atualizaUsuario().then(() => {
-              this.$router.push('/home')
+              this.$router.push('/map3d')
             })
           }).catch((err) => {
             this.formErro = err.response.data.message;
@@ -86,3 +87,8 @@ export default {
   },
 }
 </script>
+<style lang="scss">
+.dialog-form { 
+  margin-top: 120px!important;
+}
+</style>
