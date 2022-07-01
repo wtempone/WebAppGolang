@@ -67,7 +67,7 @@ export default {
         this.formErro = ''
         login(this.formDados.email, this.formDados.senha)
           .then(() => {
-            console.log('passa)')
+            console.log('passou login)')
             this.atualizaUsuario().then(() => {
               this.$router.push('/map3d')
             })

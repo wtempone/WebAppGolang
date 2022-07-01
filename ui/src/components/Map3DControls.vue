@@ -9,7 +9,7 @@
                 :right="controlsSlide.right" :left="controlsSlide.left" :direction="controlsSlide.direction"
                 :open-on-hover="controlsSlide.hover" :transition="controlsSlide.transition" elevation="20">
                 <template v-slot:activator>
-                    <v-btn v-model="controlsSlide.fab" color="blue darken-2" dark fab>
+                    <v-btn v-model="controlsSlide.fab" primary dark fab>
                         <v-icon v-if="controlsSlide.fab">
                             mdi-close
                         </v-icon>
@@ -18,31 +18,31 @@
                     </v-btn>
                 </template>
 
-                <v-btn @click="$refs.map3DScene.forward()" class="mx-2" small fab dark color="indigo">
+                <v-btn @click="$refs.map3DScene.forward()" class="mx-2" small fab dark secondary>
                     <v-icon dark>
                         mdi-skip-forward
                     </v-icon>
                 </v-btn>
 
-                <v-btn @click="$refs.map3DScene.pause()" class="mx-2" small fab dark color="indigo">
+                <v-btn @click="$refs.map3DScene.pause()" class="mx-2" small fab dark accent>
                     <v-icon dark>
                         mdi-pause
                     </v-icon>
                 </v-btn>
 
-                <v-btn @click="$refs.map3DScene.play()" class="mx-2" small fab dark color="indigo">
+                <v-btn @click="$refs.map3DScene.play()" class="mx-2" small fab dark success>
                     <v-icon dark>
                         mdi-play
                     </v-icon>
                 </v-btn>
 
-                <v-btn @click="$refs.map3DScene.replay()" class="mx-2" small fab dark color="indigo">
+                <v-btn @click="$refs.map3DScene.replay()" class="mx-2" small fab dark info>
                     <v-icon dark>
                         mdi-replay
                     </v-icon>
                 </v-btn>
 
-                <v-btn @click="$refs.map3DScene.backward()" class="mx-2" small fab dark color="indigo">
+                <v-btn @click="$refs.map3DScene.backward()" class="mx-2" small fab dark secondary>
                     <v-icon dark>
                         mdi-skip-backward
                     </v-icon>
@@ -54,12 +54,12 @@
 
         <div class="panel-telemetry">
 
-            <v-speed-dial v-model="controlsTelemetry.fab" :top="controlsTelemetry.top"
+            <v-speed-dial  v-model="controlsTelemetry.fab" :top="controlsTelemetry.top"
                 :bottom="controlsTelemetry.bottom" :right="controlsTelemetry.right" :left="controlsTelemetry.left"
                 :direction="controlsTelemetry.direction" :open-on-hover="controlsTelemetry.hover"
                 :transition="controlsTelemetry.transition" elevation="20">
                 <template v-slot:activator>
-                    <v-btn v-model="controlsTelemetry.fab" color="blue darken-2" dark fab>
+                    <v-btn v-model="controlsTelemetry.fab" primary dark fab>
                         <v-icon v-if="controlsTelemetry.fab">
                             mdi-close </v-icon>
                         <v-icon v-else>
@@ -109,7 +109,7 @@
                 :right="controlsInfo.right" :left="controlsInfo.left" :direction="controlsInfo.direction"
                 :open-on-hover="controlsInfo.hover" :transition="controlsInfo.transition" elevation="20">
                 <template v-slot:activator>
-                    <v-btn v-model="controlsInfo.fab" color="blue darken-2" dark fab>
+                    <v-btn v-model="controlsInfo.fab" primary dark fab>
                         <v-icon v-if="controlsInfo.fab">
                             mdi-close </v-icon>
                         <v-icon v-else>
@@ -250,7 +250,7 @@ export default {
     top: 0;
     right: 0;
     display: inline-block;
-    padding-top: 60px;
+    padding-top: 0px;
     padding-right: 0px;
 }
 
@@ -259,7 +259,7 @@ export default {
     top: 0;
     left: 0;
     display: inline-block;
-    padding-top: 60px;
+    padding-top: 0px;
     padding-right: 0px;
 }
 

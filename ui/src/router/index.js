@@ -44,10 +44,10 @@ export default router
 
 router.beforeEach(async (to, from, next) => {
   await store.dispatch('usuario/atualizaUsuario');
-  if (to.name != 'map3d' && to.name != 'login' && to.name != 'registro' && !store.getters['usuario/usuario']) {
+  console.log("navegando: ",  to.name , store.getters['usuario/usuario'])
+  if (to.name != '' && to.name != 'map3d' && to.name != 'login' && to.name != 'registro' && !store.getters['usuario/usuario']) {
     console.log('nao autenticado')
     next('/login')
-
   } else {
     next()
   }

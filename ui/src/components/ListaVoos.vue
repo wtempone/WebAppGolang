@@ -33,7 +33,7 @@
 
 </template>
 <script>
-import { obterListaVoos } from "@/services/voos"
+import { obterListaVoos, obterVoo } from "@/services/voos"
 
 export default {
     data() {
@@ -51,9 +51,17 @@ export default {
             })
         },
         verVoo(link) {
-            const linkLimpo = link.replace('/flight/', '')
-            this.$router.push(`/voo/${linkLimpo}`)
-            
+            const voo = link.replace('/flight/','')
+            //console.log('voo:', voo)
+            obterVoo(voo).then(res => {
+                console.lot('retorno do voo: ', res.data)
+                this.$router.push(`/map3d/`, {
+                    jsonTrack: res.data
+                })
+            }).catch((err) => {
+                console.log("err", err)
+            })
+
         }
     },
     mounted() {

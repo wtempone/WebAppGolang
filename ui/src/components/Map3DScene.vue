@@ -2,10 +2,7 @@
     <div>
         <div id="appgl" class="root3dElement">
         </div>
-
-
         <div class="progress-panel">
-
             <div class="labels">
                 <v-icon v-if="reverseMode" small color="white">
                     mdi-chevron-left-box-outline
@@ -20,34 +17,25 @@
                 </v-icon>
             </div>
             <v-progress-linear class="mx-0"></v-progress-linear>
-
         </div>
     </div>
 </template>
 <script>
 
 import {
-    Mesh,
-    PerspectiveCamera,
     WebGLRenderer,
     Scene,
     Color,
-    BoxGeometry,
-    MeshLambertMaterial,
-    PointLight,
-    Shape,
-    ExtrudeGeometry,
-    MeshStandardMaterial,
     Vector3,
     CatmullRomCurve3,
-    PlaneBufferGeometry,
     TextureLoader,
-    PlaneGeometry,
-    ShaderMaterial,
-    BufferAttribute,
+    PlaneBufferGeometry,
+    MeshStandardMaterial,
+    Mesh 
 } from 'three';
 
 import { InteractionManager } from "three.interactive";
+
 import * as TWEEN from "@tweenjs/tween.js";
 import ThreeJSOverlayView from '@ubilabs/threejs-overlay-view';
 import { Line2 } from 'three/examples/jsm/lines/Line2.js';
@@ -57,12 +45,16 @@ import {
     getMapsApiOptions,
     loadMapsApi
 } from '../jsm/load-maps-api';
-import { getImageMap, getImageMapBump } from '@/services/google';
+import { createHeartShape } from '@/webgl/objects.js'
+import { createPerspectiveCamera, createOrthographicCamera } from '@/webgl/cameras.js'
+import { createligth } from '@/webgl/lights.js'
+import { getImageMap } from "@/services/google"
 import moment from 'moment';
 export default {
     props: {
         jsonTrack: {},
     },
+
     data: () => ({
         map: {},
         idRoot3dElement: "appgl",
@@ -95,21 +87,22 @@ export default {
         time: {},
         cordsAjusted: {}
     }),
+
     watch: {
 
     },
     methods: {
-        velocityUp: function () {
-            if (this.velocityPlus >= 6) re
-            {
-                this.velocityPlus++
-            }
-        },
         dateTime(value) {
             return moment(value).format('H:mm');
         },
         formatHour(value) {
             return moment(value, "HH:mm:ss").format('H:mm');
+        },
+        velocityUp: function () {
+            if (this.velocityPlus >= 6) re
+            {
+                this.velocityPlus++
+            }
         },
         velocityDown: function () {
             if (this.velocityPlus < 2) return
@@ -207,58 +200,6 @@ export default {
                     this.animationProgress + ((this.reverseMode ? -this.deltaTime : this.deltaTime) * this.velocityPlus)
             }
         },
-        createCamera: function () {
-            const camera = new PerspectiveCamera(
-                75,
-                window.innerWidth / window.innerHeight,
-                0.1,
-                1000
-            );
-            camera.position.z = 500;
-            return camera;
-        },
-        createCube: function ({ color, x, y }) {
-            const geometry = new BoxGeometry();
-            const material = new MeshLambertMaterial({ color });
-            const cube = new Mesh(geometry, material);
-            cube.position.set(x, y, 0);
-            return cube;
-        },
-        createHeartShape: function () {
-
-            const shape = new Shape();
-            const x = -2.5;
-            const y = -5;
-            shape.moveTo(x + 2.5, y + 2.5);
-            shape.bezierCurveTo(x + 2.5, y + 2.5, x + 2, y, x, y);
-            shape.bezierCurveTo(x - 3, y, x - 3, y + 3.5, x - 3, y + 3.5);
-            shape.bezierCurveTo(x - 3, y + 5.5, x - 1.5, y + 7.7, x + 2.5, y + 9.5);
-            shape.bezierCurveTo(x + 6, y + 7.7, x + 8, y + 4.5, x + 8, y + 3.5);
-            shape.bezierCurveTo(x + 8, y + 3.5, x + 8, y, x + 5, y);
-            shape.bezierCurveTo(x + 3.5, y, x + 2.5, y + 2.5, x + 2.5, y + 2.5);
-
-            const extrudeSettings = {
-                steps: 2,  // ui: steps
-                depth: 4,  // ui: depth
-                bevelEnabled: true,  // ui: bevelEnabled
-                bevelThickness: 1,  // ui: bevelThickness
-                bevelSize: 1,  // ui: bevelSize
-                bevelSegments: 2,  // ui: bevelSegments
-            };
-
-            const geometry = new ExtrudeGeometry(shape, extrudeSettings);
-
-            const mesh = new Mesh(
-                geometry,
-                new MeshStandardMaterial({ color: 0xff0000 })
-            );
-            return mesh;
-        },
-        createLight: function () {
-            const light = new PointLight(0xffffff, 1, 1000);
-            light.position.set(0, 0, 10);
-            return light;
-        },
         createRenderer: function () {
             const root = document.getElementById(this.idRoot3dElement);
             const renderer = new WebGLRenderer({ antialias: true });
@@ -289,104 +230,57 @@ export default {
                 this.scene.add(this.trackLine);
             }
         },
+        createGround: async function () {
+            const { apiKey, mapId } = getMapsApiOptions();
+            const loader = new TextureLoader()
+            const utlImage = getImageMap(this.VIEW_PARAMS.center, this.VIEW_PARAMS.zoom, 300, 2)
+            const texture = loader.load(utlImage)
+
+            const geometry = new PlaneBufferGeometry(300, 300, 20, 20)
+
+            const positions = geometry.attributes.position.array;
+            const material = new MeshStandardMaterial({ color: 0x999999, map: texture })
+
+            var vertices = []
+            for (let i = 0; i < positions.length; i += 3) {
+                const v = new Vector3(positions[i], positions[i + 1], positions[i + 2])
+                vertices.push(v)
+            }
+
+            let coords = vertices;
+            coords = coords.map(p => (this.overlay.vector3ToLatLngAlt(p)));
+            const coorsLatLng = coords.map(c => ({ lat: c.lat, lng: c.lng }))
+
+            const altitudes = await this.getElevations(coorsLatLng);
+
+            console.log('Diferenca = ', altitudes[0].elevation, this.jsonTrack.trackingLog.coords[0].altitude)
+
+            var zpos = []
+            for (let i = 0; i < coords.length; i++) {
+                zpos.push(altitudes[i].elevation - this.jsonTrack.trackingLog.coords[0].altitude)
+            }
+            var zindex = 0
+            for (let i = 0; i < positions.length; i += 3) {
+                positions[i + 2] = zpos[zindex]
+                zindex++
+            }
+            // console.log('positionsGeometry == >', positions)
+            // geometry.positions = positions;
+
+            const plane = new Mesh(geometry, material)
+
+            return plane
+        },
         updateCurrentLocation: function () {
             navigator.geolocation.getCurrentPosition(
                 position => {
                     const coord = { lat: position.coords.latitude, lng: position.coords.longitude }
-                    console.log("geting CurrentLocation ==> "), coord
                     this.VIEW_PARAMS.center = { lat: coord.lat, lng: coord.lng }
                 },
                 error => {
                     console.log('erro - possition', error.message);
                 },
             )
-        },
-        createGround: async function () {
-            const { apiKey, mapId } = getMapsApiOptions();
-            console.log(apiKey)
-            console.log(mapId)
-            const loader = new TextureLoader()
-            const utlImage = getImageMap(this.VIEW_PARAMS.center, this.VIEW_PARAMS.zoom, 300, 2)
-            console.log(utlImage);
-            const texture = loader.load(utlImage)
-
-            const geometry = new PlaneBufferGeometry(300, 300, 10, 10)
-
-            const positions = geometry.attributes.position.array;
-
-            var vertices = []
-            console.log("positions.length: ", geometry.attributes.position.array)
-            for (let i = 0; i < positions.length; i += 3) {
-                const v = new Vector3(positions[i], positions[i + 1], positions[i + 2])
-                vertices.push(v)
-            }
-
-            console.log('vertices:', vertices)
-            // let coords = vertices;
-            // coords = coords.map(p => (this.overlay.vector3ToLatLngAlt(p)));
-            // console.log("coords:", coords)
-            // const coorsLatLng = coords.map(c => ({ lat: c.lat, lng: c.lng }))
-            // console.log("coords:", coords)
-
-            // const altitudes = await this.getElevations(coorsLatLng);
-            // console.log("altitudes:", altitudes)
-
-            // for (let i = 0; i < coords.length; i++) {
-            //     vertices[i].z = altitudes[i].elevation - 700
-            // }
-
-            // console.log('newVertices', vertices)
-
-            //const newPoints = new Float32Array(geometry.attributes.position.array.length * 3)
-            // for (var i = 0; i < vertices.length; i++) {
-            //     console.log('vertice -> ',vertices[i])
-            //     newPoints[i].fill(vertices[i].x, vertices[i].y, vertices[i].z)
-            // }
-            //console.log("newPoints ", newPoints);
-            // const positionAttribute = new BufferAttribute().copyVector3sArray(vertices)
-            // geometry.setAttribute('position', positionAttribute)
-
-            // const newGeometry = new BufferGeometry().setFromPoints(newPoints)
-            const material = new MeshStandardMaterial({ color: 0xff8888, map: texture })
-
-            const plane = new Mesh(geometry, material)
-            //plane.scale.set(1.125, 1.125, 1)
-
-            return plane
-        },
-        recreateMeshByVector3Array(geometry, vector3array) {
-            const quaternion = new THREE.Quaternion();
-
-            for (let i = 0; i < geometry.vertices.length; i++) {
-                // a single vertex Y position
-                const zPos = geometry.vertices[i].z;
-                const twistAmount = 10;
-                const direction = new Vector3(1, 0, 0);
-
-                quaternion.setFromAxisAngle(
-                    direction,
-                    (Math.PI / 180) * (zPos / twistAmount)
-                );
-
-                geometry.vertices[i].applyQuaternion(quaternion);
-            }
-
-            // tells Three.js to re-render this mesh
-            geometry.verticesNeedUpdate = true;
-        },
-        listToMatrix: function (list, elementsPerSubArray) {
-            var matrix = [], i, k;
-            console.log(list)
-            for (i = 0, k = -1; i < list.length; i++) {
-                if (i % elementsPerSubArray === 0) {
-                    k++;
-                    matrix[k] = [];
-                }
-
-                matrix[k].push(list[i]);
-            }
-
-            return matrix;
         },
         getElevations: async function (locations) {
             const elevator = new google.maps.ElevationService();
@@ -407,7 +301,8 @@ export default {
 
             this.renderer = this.createRenderer();
             this.scene = this.createScene();
-            this.camera = this.createCamera();
+            // this.camera = createPerspectiveCamera();
+            this.camera = createOrthographicCamera()
 
             this.interactionManager = new InteractionManager(
                 this.renderer,
@@ -420,9 +315,9 @@ export default {
 
             const ground = await this.createGround()
             this.scene.add(ground)
-            this.player = this.createHeartShape()
+            this.player = createHeartShape()
             this.scene.add(this.player)
-            this.light = this.createLight()
+            this.light = createligth()
             this.scene.add(this.light);
 
             this.openFile()
